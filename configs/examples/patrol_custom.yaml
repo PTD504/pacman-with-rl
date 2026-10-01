@@ -1,0 +1,39 @@
+map: |
+  #########
+  #.......#
+  #.P...0.#
+  #.......#
+  #...#...#
+  #.......#
+  #.1.....#
+  #.......#
+  #########
+rules:
+  max_steps: 500
+  pacman_lives: 2
+pacman:
+  controller:
+    name: greedy_pellet
+    params:
+      avoid_ghost_radius: 1
+ghosts:
+  - ghost_id: 0
+    move_period: 1
+    controller:
+      name: patrol
+      params:
+        waypoints:
+          - [2, 6]
+          - [6, 6]
+          - [6, 2]
+          - [2, 2]
+  - ghost_id: 1
+    move_period: 2
+    controller:
+      name: patrol
+      params:
+        waypoints:
+          - [6, 2]
+          - [2, 2]
+          - [2, 6]
+          - [6, 6]

@@ -1,0 +1,40 @@
+map: classic
+rules:
+  max_steps: 800
+  pacman_lives: 1
+  frightened_duration: 25
+  mode_schedule:
+    - [CHASE, 80]
+    - [SCATTER, 10]
+pacman:
+  controller:
+    name: greedy_pellet
+    params:
+      avoid_ghost_radius: 3
+      hunt_frightened: false
+ghosts:
+  - ghost_id: 0
+    move_period: 1
+    controller:
+      name: chase
+      params:
+        epsilon: 0.0
+  - ghost_id: 1
+    move_period: 2
+    controller:
+      name: ambush
+      params:
+        lookahead: 3
+        epsilon: 0.1
+  - ghost_id: 2
+    move_period: 2
+    controller:
+      name: flank
+      params:
+        partner_id: 0
+  - ghost_id: 3
+    move_period: 3
+    controller:
+      name: chase
+      params:
+        epsilon: 0.2

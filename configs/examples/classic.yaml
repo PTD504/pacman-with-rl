@@ -1,0 +1,52 @@
+map: classic
+rules:
+  max_steps: 1000
+  pacman_lives: 3
+  pellet_score: 10
+  power_pellet_score: 50
+  frightened_duration: 40
+  ghost_respawn_delay: 10
+  mode_schedule:
+    - [SCATTER, 20]
+    - [CHASE, 60]
+pacman:
+  controller:
+    name: greedy_pellet
+    params:
+      avoid_ghost_radius: 2
+      hunt_frightened: true
+ghosts:
+  - ghost_id: 0
+    move_period: 1
+    start_delay: 0
+    scatter_target: [0, 27]
+    controller:
+      name: chase
+  - ghost_id: 1
+    move_period: 1
+    start_delay: 0
+    scatter_target: [0, 0]
+    controller:
+      name: ambush
+      params:
+        lookahead: 4
+  - ghost_id: 2
+    move_period: 1
+    start_delay: 0
+    scatter_target: [30, 27]
+    controller:
+      name: flank
+      params:
+        partner_id: 0
+  - ghost_id: 3
+    move_period: 1
+    start_delay: 0
+    scatter_target: [30, 0]
+    controller:
+      name: patrol
+      params:
+        waypoints:
+          - [23, 1]
+          - [23, 12]
+          - [29, 12]
+          - [29, 1]
