@@ -1,0 +1,13 @@
+; name: open_arena
+; description: Wide open arena with central obstacles and corner energizers
+###########
+#o.......o#
+#.##...##.#
+#.........#
+#...0.1...#
+#....P....#
+#...2.3...#
+#.........#
+#.##...##.#
+#o.......o#
+###########

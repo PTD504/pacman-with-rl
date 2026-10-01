@@ -1,0 +1,9 @@
+; name: tiny
+; description: Minimal 7x7 valid map
+#######
+#o.P.o#
+#.###.#
+#.0=1.#
+#.###.#
+#o...o#
+#######

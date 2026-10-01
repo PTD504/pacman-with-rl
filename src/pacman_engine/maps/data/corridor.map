@@ -1,0 +1,13 @@
+; name: corridor
+; description: Serpentine single-path corridor testing navigation and evasion
+###########
+#P.......o#
+#########.#
+#0........#
+#.#########
+#........1#
+#########.#
+#o........#
+#.#########
+#........o#
+###########
