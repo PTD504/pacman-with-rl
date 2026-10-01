@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from collections import deque
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -71,6 +72,8 @@ class PacmanEnv(gym.Env):
         cell_size: int = 20,
         lives: int | None = None,
         max_steps: int | None = 1000,
+        frame_skip: int = 1,
+        frame_stack: int = 1,
     ) -> None:
         """Initialize PacmanEnv.
 
@@ -85,8 +88,19 @@ class PacmanEnv(gym.Env):
             cell_size: Pixel size for renderer if rendering is enabled.
             lives: Initial lives override for Pacman (>= 1).
             max_steps: Maximum step limit for episode cutoff.
+            frame_skip: Number of simulation ticks to repeat action (>= 1).
+            frame_stack: Number of consecutive observations to stack together (>= 1).
         """
         super().__init__()
+        if frame_skip < 1:
+            raise ValueError(f"frame_skip must be >= 1, got {frame_skip}")
+        if frame_stack < 1:
+            raise ValueError(f"frame_stack must be >= 1, got {frame_stack}")
+
+        self.frame_skip = int(frame_skip)
+        self.frame_stack = int(frame_stack)
+        self._frames: deque[np.ndarray] = deque(maxlen=self.frame_stack)
+
         self.render_mode = render_mode
         self.reward_func = reward_func or default_reward_func
         self._cell_size = cell_size
@@ -131,12 +145,75 @@ class PacmanEnv(gym.Env):
 
         # Observation space from builder spec
         spec = self.obs_builder.spec(self.game.game_map, self._base_config.rules)
-        self.observation_space = spaces.Box(
-            low=spec.low,
-            high=spec.high,
-            shape=spec.shape,
-            dtype=spec.dtype,
-        )
+        base_shape = spec.shape
+        dtype = spec.dtype
+        low = spec.low
+        high = spec.high
+
+        if self.frame_stack == 1:
+            self.observation_space = spaces.Box(
+                low=low,
+                high=high,
+                shape=base_shape,
+                dtype=dtype,
+            )
+        else:
+            channels_first = getattr(self.obs_builder, "channels_first", False)
+            if len(base_shape) == 1:
+                dim = base_shape[0] * self.frame_stack
+                low_arr = np.tile(low, self.frame_stack) if not np.isscalar(low) else low
+                high_arr = np.tile(high, self.frame_stack) if not np.isscalar(high) else high
+                self.observation_space = spaces.Box(
+                    low=low_arr,
+                    high=high_arr,
+                    shape=(dim,),
+                    dtype=dtype,
+                )
+            elif len(base_shape) == 2:
+                self.observation_space = spaces.Box(
+                    low=low,
+                    high=high,
+                    shape=(self.frame_stack, *base_shape),
+                    dtype=dtype,
+                )
+            elif len(base_shape) == 3:
+                if channels_first:
+                    c, h, w = base_shape
+                    self.observation_space = spaces.Box(
+                        low=low,
+                        high=high,
+                        shape=(c * self.frame_stack, h, w),
+                        dtype=dtype,
+                    )
+                else:
+                    h, w, c = base_shape
+                    self.observation_space = spaces.Box(
+                        low=low,
+                        high=high,
+                        shape=(h, w, c * self.frame_stack),
+                        dtype=dtype,
+                    )
+            else:
+                raise ValueError(f"Unsupported observation shape: {base_shape}")
+
+    def _get_stacked_obs(self) -> np.ndarray:
+        """Combine frames currently stored in deque according to frame_stack rules."""
+        if self.frame_stack == 1:
+            return self._frames[-1]
+
+        frames = list(self._frames)
+        spec_shape = self.obs_builder.spec(self.game.game_map, self._base_config.rules).shape
+        if len(spec_shape) == 1:
+            return np.concatenate(frames, axis=0)
+        elif len(spec_shape) == 2:
+            return np.stack(frames, axis=0)
+        elif len(spec_shape) == 3:
+            channels_first = getattr(self.obs_builder, "channels_first", False)
+            if channels_first:
+                return np.concatenate(frames, axis=0)
+            else:
+                return np.concatenate(frames, axis=-1)
+        return frames[-1]
 
     def reset(
         self,
@@ -149,8 +226,13 @@ class PacmanEnv(gym.Env):
 
         self.game, self.obs_builder = build_game_and_observation(self._base_config, seed=seed)
         view = self.game.reset(seed=seed)
-        obs = self.obs_builder.build(view)
+        first_obs = self.obs_builder.build(view)
 
+        self._frames.clear()
+        for _ in range(self.frame_stack):
+            self._frames.append(first_obs)
+
+        obs = self._get_stacked_obs()
         info = {
             "score": view.score,
             "lives": view.lives,
@@ -163,14 +245,25 @@ class PacmanEnv(gym.Env):
         self,
         action: int | Action,
     ) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
-        """Execute one simulation step."""
+        """Execute one simulation step with optional frame_skip."""
         act = Action(int(action))
-        step_result = self.game.step(act)
-        obs = self.obs_builder.build(self.game.view)
+        total_reward = 0.0
+        terminated = False
+        truncated = False
+        combined_events = []
 
-        reward = float(self.reward_func(step_result, self.game.view))
-        terminated = step_result.terminated
-        truncated = step_result.truncated
+        for _ in range(self.frame_skip):
+            step_result = self.game.step(act)
+            combined_events.extend(step_result.events)
+            total_reward += float(self.reward_func(step_result, self.game.view))
+            terminated = step_result.terminated
+            truncated = step_result.truncated
+            if terminated or truncated:
+                break
+
+        latest_obs = self.obs_builder.build(self.game.view)
+        self._frames.append(latest_obs)
+        obs = self._get_stacked_obs()
 
         info = {
             "score": self.game.view.score,
@@ -178,9 +271,9 @@ class PacmanEnv(gym.Env):
             "tick": self.game.view.tick,
             "remaining_pellets": self.game.view.remaining_pellets,
             "outcome": self.game.outcome.name,
-            "events": step_result.events,
+            "events": combined_events,
         }
-        return obs, reward, terminated, truncated, info
+        return obs, total_reward, terminated, truncated, info
 
     def render(self) -> np.ndarray | None:
         """Render the environment according to render_mode."""

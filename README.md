@@ -368,11 +368,32 @@ env = PacmanEnv(
     reward_func=custom_reward,
     lives=1,  # Single life for RL training episodes
     max_steps=1000,
+    frame_skip=4,  # Repeat action for 4 simulation ticks
+    frame_stack=4,  # Stack 4 consecutive observations
     render_mode="rgb_array",  # or "human"
 )
 ```
 
-### 3. Stable-Baselines3 One-Liner Integration
+### 3. Visual Atari-Style Setup (Grayscale 84x84 + Frame Stack & Skip)
+```python
+from pacman_engine import PacmanEnv
+
+# Produces observation tensor of shape (4, 84, 84) with 4-tick action repeat
+env = PacmanEnv(
+    map_name="classic",
+    obs_type="rgb",
+    obs_params={
+        "grayscale": True,
+        "channels_first": True,
+        "output_size": (84, 84),
+    },
+    frame_skip=4,
+    frame_stack=4,
+    lives=1,
+)
+```
+
+### 4. Stable-Baselines3 One-Liner Integration
 ```python
 from stable_baselines3 import PPO
 from pacman_engine import PacmanEnv
