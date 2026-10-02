@@ -38,3 +38,18 @@ htmlcov/
 *.swp
 *.swo
 .DS_Store
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# RL Experiments, Artifacts & Media
+models/
+**/models/
+tensorboard_logs/
+**/tensorboard_logs/
+*.tfevents*
+*.zip
+*.mp4
+*.avi
+*.mov
+*.mkv
