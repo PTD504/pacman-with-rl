@@ -17,7 +17,7 @@ from pacman_engine.controllers import (
     register_controller,
 )
 from pacman_engine.engine import PacmanGame, StepResult
-from pacman_engine.envs import PacmanEnv
+from pacman_engine.envs import MetricTrackingCallback, PacmanEnv, plot_learning_curves
 from pacman_engine.events import (
     Event,
     FrightenedEnded,
@@ -87,6 +87,7 @@ __all__ = [
     "MapBuilder",
     "MapGraph",
     "MapValidationError",
+    "MetricTrackingCallback",
     "ObservationBuilder",
     "ObservationConfig",
     "ObservationSpec",
@@ -113,6 +114,7 @@ __all__ = [
     "list_observations",
     "load_builtin_map",
     "play",
+    "plot_learning_curves",
     "record_episode",
     "register_controller",
     "register_observation",

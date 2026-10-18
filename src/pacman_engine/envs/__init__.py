@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gymnasium as gym
 
+from pacman_engine.envs.callbacks import MetricTrackingCallback, plot_learning_curves
 from pacman_engine.envs.gym_env import PacmanEnv, default_reward_func
 
 # Register Pacman environments in Gymnasium's global registry
@@ -25,4 +26,9 @@ gym.register(
     kwargs={"map_name": "classic", "obs_type": "rgb"},
 )
 
-__all__ = ["PacmanEnv", "default_reward_func"]
+__all__ = [
+    "MetricTrackingCallback",
+    "PacmanEnv",
+    "default_reward_func",
+    "plot_learning_curves",
+]
