@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 
 DEFAULT_GRID_CHANNELS: tuple[str, ...] = (
     "walls",
-    "doors",
     "pellets",
     "power_pellets",
     "pacman",
@@ -126,7 +125,7 @@ class GridObservationBuilder(ObservationBuilder):
         rows, cols = game_map.rows, game_map.cols
 
         planes: dict[str, np.ndarray] = {
-            "walls": game_map.walls.astype(np.float32),
+            "walls": (game_map.walls | game_map.doors).astype(np.float32),
             "doors": game_map.doors.astype(np.float32),
             "pellets": view.pellets.astype(np.float32),
             "power_pellets": view.power_pellets.astype(np.float32),

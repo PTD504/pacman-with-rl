@@ -271,15 +271,15 @@ Encodes state into a 1-D `float32` vector:
 Encodes state into a multi-channel `float32` binary tensor of one-hot planes.
 
 - **Default Channel Ordering**:
-  1. `walls`: Map impassable wall cells.
-  2. `doors`: Ghost spawn door cells.
-  3. `pellets`: Active standard dot pellets.
-  4. `power_pellets`: Active energizer power pellets.
-  5. `pacman`: Pacman's current coordinate.
-  6. `ghosts`: Active ghosts in normal mode (SCATTER or CHASE).
-  7. `frightened_ghosts`: Ghosts currently in FRIGHTENED mode.
+  1. `walls`: Impassable wall and door cells for Pacman.
+  2. `pellets`: Active standard dot pellets.
+  3. `power_pellets`: Active energizer power pellets.
+  4. `pacman`: Pacman's current coordinate.
+  5. `ghosts`: Active ghosts in normal mode (SCATTER or CHASE).
+  6. `frightened_ghosts`: Ghosts currently in FRIGHTENED mode.
 
 - **Optional Channels**:
+  - `doors`: Dedicated ghost spawn door cells.
   - `dead_ghosts`: Ghosts in DEAD mode returning to the spawn box.
   - `all_ghosts`: Ghosts in any mode.
   - `pacman_direction`: Expands into 4 directional planes (`pacman_dir_up`, `pacman_dir_down`, `pacman_dir_left`, `pacman_dir_right`).
