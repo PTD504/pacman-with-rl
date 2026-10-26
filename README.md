@@ -368,17 +368,17 @@ env = PacmanEnv(
     reward_func=custom_reward,
     lives=1,  # Single life for RL training episodes
     max_steps=1000,
-    frame_skip=4,  # Repeat action for 4 simulation ticks
+    frame_skip=1,  # 1 simulation tick per step (optimal for discrete grid navigation)
     frame_stack=4,  # Stack 4 consecutive observations
     render_mode="rgb_array",  # or "human"
 )
 ```
 
-### 3. Visual Atari-Style Setup (Grayscale 84x84 + Frame Stack & Skip)
+### 3. Visual Setup (Grayscale 84x84 + Frame Stack)
 ```python
 from pacman_engine import PacmanEnv
 
-# Produces observation tensor of shape (4, 84, 84) with 4-tick action repeat
+# Produces observation tensor of shape (4, 84, 84) with 4-frame temporal stack
 env = PacmanEnv(
     map_name="classic",
     obs_type="rgb",
@@ -387,7 +387,7 @@ env = PacmanEnv(
         "channels_first": True,
         "output_size": (84, 84),
     },
-    frame_skip=4,
+    frame_skip=1,
     frame_stack=4,
     lives=1,
 )
